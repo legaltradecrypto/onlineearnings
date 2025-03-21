@@ -3,207 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bit-Digital Mining Online</title>
+    <title>Admin Dashboard</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #111;
-            color: white;
             text-align: center;
-            margin: 0;
-            padding: 20px;
+            background: #222;
+            color: white;
         }
         .container {
             max-width: 400px;
-            margin: auto;
-            background: #222;
+            margin: 50px auto;
             padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
-        }
-        .header {
-            font-size: 18px;
-            font-weight: bold;
-            padding: 10px;
             background: #333;
-            border-radius: 5px;
+            border-radius: 8px;
         }
-        .user-info {
-            background: #333;
-            padding: 15px;
-            margin-top: 15px;
-            border-radius: 5px;
-        }
-        .user-info img {
-            width: 40px;
-            vertical-align: middle;
-        }
-        .balance-section {
-            background: #444;
-            padding: 15px;
-            margin-top: 15px;
-            border-radius: 5px;
-        }
-        .balance {
-            font-size: 24px;
-            font-weight: bold;
-            color: yellow;
-        }
-        .buttons {
-            margin-top: 10px;
-        }
-
-        .button {
-            display: block;
-            width: 80%;
-            margin: 5px auto;
+        input, button {
+            width: 90%;
             padding: 10px;
-            background: gray;
-            color: white;
-            text-decoration: none;
+            margin: 10px 0;
             border-radius: 5px;
-            cursor: pointer;
+            border: none;
         }
-        .other-services {
-            margin-top: 20px;
-        }
-        .service-button {
-            display: inline-block;
-            width: 45%;
-            margin: 5px;
-            padding: 10px;
-            background: gray;
+        button {
+            background: #f39c12;
             color: white;
-            text-decoration: none;
-            border-radius: 5px;
             cursor: pointer;
         }
     </style>
-
-  <!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
-<script>
-  // Your web app's Firebase configuration
-  const firebaseConfig = {
-    apiKey: "AIzaSyAT8PbIOx8YIwWhLTahkNvf02y7yGg3yFo",
-    authDomain: "bit-digital-database.firebaseapp.com",
-    projectId: "bit-digital-database",
-    storageBucket: "bit-digital-database.appspot.com",
-    messagingSenderId: "18485548254",
-    appId: "1:18485548254:web:03b854140afbb027cb5e4f"
-  };
-
-  // Initialize Firebase
-  firebase.initializeApp(firebaseConfig);
-  
-  console.log("Firebase Initialized:", firebase.apps.length > 0);
-</script>
 </head>
 <body>
-
-  <div class="container">
-    <div class="header">Welcome to <b>Bit-Digital Mining Online</b></div>
-
-    <div class="user-info">
-      <div class="overview">
-        <div class="card">
-          <div class="icon">👤</div>
-          <p id="welcomeMessage">Welcome, user</p>
-        </div>
-      </div>
+    <div class="container">
+        <h2>Welcome, <span id="username">User</span></h2>
+        <h3>Update User Balance</h3>
+        <input type="email" id="userEmail" placeholder="User Email">
+        <input type="number" id="newBalance" placeholder="New Balance">
+        <button onclick="updateBalance()">Update Balance</button>
     </div>
-       <div class="balance-section">
-        <p>Balance: <span id="balanceDisplay">0.00</span></p>
-        <p>Bonus: <span id="bonusDisplay">0.00</span></p>
-        <p>Withdrawal: <span id="withdrawalDisplay">0.00</span></p>
 
-        <!-- Update Balance Section (Conditionally Displayed) -->
-        <div id="adminBalanceUpdateSection" style="display:none;">
-            <input type="number" id="balanceUpdateAmount" placeholder="Enter amount">
-            <button onclick="updateBalance()">Update Balance</button>
-        </div>
-    </div>
-                <div class="buttons">
-                <button class="button" onclick="openLiveChat()">Deposit</button>
-                <button class="button" onclick="openLiveChat()">Withdraw</button>
-                <button class="button" onclick="openLiveChat()">Transfer</button>
-            </div>
-        </div>
-
-        <div class="other-services">
-            <div><b>Other Services</b></div>
-            <button class="service-button" onclick="openLiveChat()">Financing</button>
-            <button class="service-button" onclick="openLiveChat()">Wallet</button>
-            <button class="service-button" onclick="openLiveChat()">Security</button>
-            <button class="service-button" onclick="openLiveChat()">Questions</button>
-        </div>
-    </div>
     <script>
-        firebase.auth().onAuthStateChanged(user => {
-          if (user) {
-            const userId = user.uid;
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCzV89S5k2Cc1cv0nBNcDItXAS3Xrq3z3I",
+            authDomain: "database-e0b02.firebaseapp.com",
+            projectId: "database-e0b0",
+            storageBucket: "database-e0b02.appspot.com",
+            messagingSenderId: "74833071591",
+            appId: "1:74833071591:web:f4f1dd5e2aafebda7c8142"
+        };
 
-            firebase.firestore().collection('users').doc(userId).get()
-              .then((doc) => {
-                if (doc.exists) {
-                  const userData = doc.data();
-                  const username = userData.username;
-                  const balance = userData.balance;
-                  const bonus = userData.bonus;
-                  const withdrawal = userData.withdrawal;
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
 
-                  // Update the username display
-                  const welcomeMessage = document.getElementById('welcomeMessage');
-                  welcomeMessage.textContent = `Welcome, ${username}`;
-
-                  // Update balance, bonus, and withdrawal displays
-                  document.getElementById('balanceDisplay').textContent = balance.toFixed(2);
-                  document.getElementById('bonusDisplay').textContent = bonus.toFixed(2);
-                  document.getElementById('withdrawalDisplay').textContent = withdrawal.toFixed(2);
-                } else {
-                  console.log("No such document!");
-                  // Reset all values
-                  document.getElementById('welcomeMessage').textContent = "Welcome, user";
-                  document.getElementById('balanceDisplay').textContent = "0.00";
-                  document.getElementById('bonusDisplay').textContent = "0.00";
-                  document.getElementById('withdrawalDisplay').textContent = "0.00";
-                }
-              })
-              .catch((error) => {
-                console.log("Error getting document:", error);
-                // Reset all values
-                document.getElementById('welcomeMessage').textContent = "Welcome, user";
-                document.getElementById('balanceDisplay').textContent = "0.00";
-                document.getElementById('bonusDisplay').textContent = "0.00";
-                document.getElementById('withdrawalDisplay').textContent = "0.00";
-              });
-
-              // Check if the user is an admin and show/hide the balance update section
-              firebase.firestore().collection('admins').doc(userId).get()
-                .then((doc) => {
-                  if (doc.exists && doc.data().isAdmin === true) {
-                    // User is an admin, show the balance update section
-                    document.getElementById('adminBalanceUpdateSection').style.display = 'block'; // Or 'inline'
-                  } else {
-                    // User is not an admin, hide the balance update section
-                    document.getElementById('adminBalanceUpdateSection').style.display = 'none';
-                  }
-                })
-                .catch((error) => {
-                  console.error("Error checking admin status:", error);
-                  document.getElementById('adminBalanceUpdateSection').style.display = 'none';
+        // Fetch and Display Logged-in Username
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                const userRef = db.collection("users").doc(user.uid);
+                userRef.get().then(doc => {
+                    if (doc.exists) {
+                        document.getElementById("username").innerText = doc.data().username;
+                    }
                 });
             } else {
-              // User is signed out
-              document.getElementById('welcomeMessage').textContent = "Welcome, user";
-              document.getElementById('balanceDisplay').textContent = "0.00";
-              document.getElementById('bonusDisplay').textContent = "0.00";
-              document.getElementById('withdrawalDisplay').textContent = "0.00";
+                window.location.href = "login.html"; // Redirect if not logged in
             }
         });
+
+        // Function to Update User Balance
+        function updateBalance() {
+            const userEmail = document.getElementById("userEmail").value;
+            const newBalance = document.getElementById("newBalance").value;
+
+            if (userEmail === "" || newBalance === "") {
+                alert("Please fill in all fields.");
+                return;
+            }
+
+            db.collection("users").where("email", "==", userEmail).get().then(querySnapshot => {
+                if (!querySnapshot.empty) {
+                    querySnapshot.forEach(doc => {
+                        doc.ref.update({ balance: parseFloat(newBalance) })
+                            .then(() => alert("Balance updated successfully!"))
+                            .catch(error => alert("Error updating balance: " + error));
+                    });
+                } else {
+                    alert("User not found!");
+                }
+            });
+        }
     </script>
-  </div>
 </body>
 </html>
