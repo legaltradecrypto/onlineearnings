@@ -91,25 +91,35 @@
     </div>
 
     <script type="module">
-        // ✅ Import Firebase Modules
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+        // ✅ Import Firebase SDKs (v11.5.0)
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-firestore.js";
+        import { getDatabase } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-database.js";
+        import { getStorage } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-storage.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.5.0/firebase-analytics.js";
 
         // ✅ Firebase Configuration
         const firebaseConfig = {
-            apiKey: "AIzaSyCzV89S5k2Cc1cv0nBNcDItXAS3Xrq3z3I-",
-            authDomain: "database-e0b02.firebaseapp.com",
-            projectId: "database-e0b02",
-            storageBucket: "database-e0b02.appspot.com",
-            messagingSenderId: "74833071591",
-            appId: "1:74833071591:web:f4f1dd5e2aafebda7c8142"
+            apiKey: "AIzaSyAT8PbIOx8YIwWhLTahkNvf02y7yGg3yFo",
+            authDomain: "bit-digital-database.firebaseapp.com",
+            databaseURL: "https://bit-digital-database-default-rtdb.firebaseio.com",
+            projectId: "bit-digital-database",
+            storageBucket: "bit-digital-database.appspot.com",
+            messagingSenderId: "18485548254",
+            appId: "1:18485548254:web:03b854140afbb027cb5e4f",
+            measurementId: "G-E0KVGV9GDT"
         };
 
-        // ✅ Initialize Firebase
+        // ✅ Initialize Firebase Services
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const realtimeDB = getDatabase(app);
+        const storage = getStorage(app);
+        const analytics = getAnalytics(app);
+
+        console.log("🔥 Firebase Initialized Successfully");
 
         function showLoading() {
             document.getElementById("loadingBanner").style.display = "block";
