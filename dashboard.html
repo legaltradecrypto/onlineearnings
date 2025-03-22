@@ -3,99 +3,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+    <title>Account Overview</title>
     <style>
+        /* General Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Body Styling */
         body {
             font-family: Arial, sans-serif;
+            background-color: #0a2740;
+            color: #ffcc00;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
             text-align: center;
-            background: #222;
-            color: white;
+            flex-direction: column;
         }
-        .container {
-            max-width: 400px;
-            margin: 50px auto;
-            padding: 20px;
-            background: #333;
-            border-radius: 8px;
-        }
-        input, button {
+
+        /* Dashboard Container */
+        .dashboard {
             width: 90%;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
+            max-width: 800px;
+            padding: 20px;
+            background: #092135;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.7);
+        }
+
+        /* Two Columns Layout */
+        .overview {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            justify-items: center;
+            width: 100%;
+        }
+
+        /* Card Style */
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            width: 100%;
+            max-width: 250px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            color: #092135;
+        }
+
+        /* Card Icons */
+        .card .icon {
+            font-size: 1.8em;
+            margin-bottom: 10px;
+        }
+
+        /* Buttons */
+        .card button, .logout-btn {
+            background-color: #ffcc00;
+            color: #092135;
             border: none;
-        }
-        button {
-            background: #f39c12;
-            color: white;
+            border-radius: 5px;
+            padding: 7px 15px;
             cursor: pointer;
+            font-size: 0.85em;
+            margin-top: 10px;
         }
+
+        .card button:hover, .logout-btn:hover {
+            background-color: #e6b800;
+        }
+
+        /* Logout Button */
+        .logout-btn {
+            background-color: red;
+            color: white;
+            width: 200px;
+            margin-top: 20px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            .overview {
+                grid-template-columns: repeat(1, 1fr);
+            }
+        }
+
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Welcome, <span id="username">User</span></h2>
-        <h3>Update User Balance</h3>
-        <input type="email" id="userEmail" placeholder="User Email">
-        <input type="number" id="newBalance" placeholder="New Balance">
-        <button onclick="updateBalance()">Update Balance</button>
+
+    <div class="dashboard">
+        <h1>Account Overview</h1>
+
+        <div class="overview">
+            <div class="card">
+                <div class="icon">👤</div>
+                <p>Welcome, <span id="username">User</span></p>
+            </div>
+            <div class="card">
+                <div class="icon">💳</div>
+                <p>Your Balance: <span id="usd-value">0.00</span></p>
+                <button onclick="showTransactionForm('withdraw')">Withdraw</button>
+            </div>
+            <div class="card">
+                <div class="icon">🎁</div>
+                <p>Added Bonus: 0.00</p>
+            </div>
+            <div class="card">
+                <div class="icon">📤</div>
+                <p>Completed Withdrawals: <span id="completed-withdrawals">0.00</span></p>
+                <button onclick="showTransactionForm('deposit')">Deposit</button>
+            </div>
+        </div>
+
+        <button class="logout-btn" onclick="logout()">Logout</button>
     </div>
 
-    <script>
-        // Firebase Configuration
+    <script type="module">
+        // ✅ Import Firebase Modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        // ✅ Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyCzV89S5k2Cc1cv0nBNcDItXAS3Xrq3z3I",
             authDomain: "database-e0b02.firebaseapp.com",
-            projectId: "database-e0b0",
+            projectId: "database-e0b02",
             storageBucket: "database-e0b02.appspot.com",
             messagingSenderId: "74833071591",
             appId: "1:74833071591:web:f4f1dd5e2aafebda7c8142"
         };
 
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
+        // ✅ Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
 
-        // Fetch and Display Logged-in Username
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                const userRef = db.collection("users").doc(user.uid);
-                userRef.get().then(doc => {
-                    if (doc.exists) {
-                        document.getElementById("username").innerText = doc.data().username;
-                    }
-                });
-            } else {
-                window.location.href = "login.html"; // Redirect if not logged in
+        // ✅ Fetch Username from Local Storage
+        document.addEventListener("DOMContentLoaded", () => {
+            const storedUsername = localStorage.getItem("username");
+            if (storedUsername) {
+                document.getElementById("username").innerText = storedUsername;
             }
         });
 
-        // Function to Update User Balance
-        function updateBalance() {
-            const userEmail = document.getElementById("userEmail").value;
-            const newBalance = document.getElementById("newBalance").value;
-
-            if (userEmail === "" || newBalance === "") {
-                alert("Please fill in all fields.");
-                return;
+        // ✅ Check Authentication & Redirect if Not Logged In
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                localStorage.removeItem("username"); // Ensure username is cleared
+                window.location.href = "login.html"; // Redirect to login
             }
+        });
 
-            db.collection("users").where("email", "==", userEmail).get().then(querySnapshot => {
-                if (!querySnapshot.empty) {
-                    querySnapshot.forEach(doc => {
-                        doc.ref.update({ balance: parseFloat(newBalance) })
-                            .then(() => alert("Balance updated successfully!"))
-                            .catch(error => alert("Error updating balance: " + error));
-                    });
-                } else {
-                    alert("User not found!");
-                }
-            });
-        }
+        // ✅ Logout Function with Immediate Redirect
+        window.logout = async function () {
+            try {
+                await signOut(auth);
+                localStorage.removeItem("username"); // Clear stored username
+                window.location.href = "login.html"; // Redirect to login page
+            } catch (error) {
+                alert("Error logging out: " + error.message);
+            }
+        };
+
+        // ✅ Function to Show Transaction Form
+        window.showTransactionForm = function (type) {
+            alert(`Opening ${type} transaction form (Feature to be implemented)`);  
+        };
     </script>
+
 </body>
 </html>
