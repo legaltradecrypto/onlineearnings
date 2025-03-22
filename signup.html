@@ -90,97 +90,108 @@
         <button class="switch-btn" onclick="showRegister()">Switch to Register</button>
     </div>
 
-    <script type="module">
-        // Firebase Configuration (Updated)
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+<script type="module">
+    // Firebase Configuration (Updated)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT.appspot.com",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
-        };
+    const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_PROJECT.firebaseapp.com",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_PROJECT.appspot.com",
+        messagingSenderId: "YOUR_SENDER_ID",
+        appId: "YOUR_APP_ID"
+    };
 
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-        function showLoading() {
-            document.getElementById("loadingBanner").style.display = "block";
+    function showLoading() {
+        document.getElementById("loadingBanner").style.display = "block";
+    }
+
+    function hideLoading() {
+        document.getElementById("loadingBanner").style.display = "none";
+    }
+
+    // ✅ Attach `register` function to `window` so the button can access it
+    window.register = async function () {
+        let fullname = document.getElementById("fullname").value.trim();
+        let username = document.getElementById("username").value.trim();
+        let email = document.getElementById("email").value.trim();
+        let phone = document.getElementById("phone").value.trim();
+        let password = document.getElementById("password").value.trim();
+        let security = document.getElementById("security").value.trim();
+
+        if (!fullname || !username || !email || !phone || !password || !security) {
+            alert("All fields are required!");
+            return;
+        }
+        if (security !== "12") {
+            alert("Wrong security answer! Try again.");
+            return;
         }
 
-        function hideLoading() {
-            document.getElementById("loadingBanner").style.display = "none";
+        showLoading();
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            // Update the user's profile with username
+            await updateProfile(user, { displayName: username });
+
+            // Store user data in Firestore
+            await setDoc(doc(db, "users", user.uid), {
+                fullName: fullname,
+                username: username,
+                email: email,
+                phone: phone
+            });
+
+            alert("Registration successful!");
+            localStorage.setItem("username", username);
+            window.location.href = "dashboard.html";
+        } catch (error) {
+            alert(error.message);
+        } finally {
+            hideLoading();
         }
+    }
 
-        // Register User
-        async function register() {
-            let fullname = document.getElementById("fullname").value.trim();
-            let username = document.getElementById("username").value.trim();
-            let email = document.getElementById("email").value.trim();
-            let phone = document.getElementById("phone").value.trim();
-            let password = document.getElementById("password").value.trim();
-            let security = document.getElementById("security").value.trim();
+    // ✅ Attach `login` function to `window`
+    window.login = async function () {
+        let email = document.getElementById("loginEmail").value.trim();
+        let password = document.getElementById("loginPassword").value.trim();
 
-            if (!fullname || !username || !email || !phone || !password || !security) {
-                alert("All fields are required!");
-                return;
-            }
-            if (security !== "12") {
-                alert("Wrong security answer! Try again.");
-                return;
-            }
+        showLoading();
+        try {
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
 
-            showLoading();
-            try {
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                const user = userCredential.user;
-
-                // Update the user's profile with username
-                await updateProfile(user, { displayName: username });
-
-                // Store user data in Firestore
-                await setDoc(doc(db, "users", user.uid), {
-                    fullName: fullname,
-                    username: username,
-                    email: email,
-                    phone: phone
-                });
-
-                alert("Registration successful!");
-                localStorage.setItem("username", username);
-                window.location.href = "dashboard.html";
-            } catch (error) {
-                alert(error.message);
-            } finally {
-                hideLoading();
-            }
+            alert("Login successful!");
+            localStorage.setItem("username", user.displayName);
+            window.location.href = "dashboard.html";
+        } catch (error) {
+            alert(error.message);
+        } finally {
+            hideLoading();
         }
+    }
 
-        // Login User
-        async function login() {
-            let email = document.getElementById("loginEmail").value.trim();
-            let password = document.getElementById("loginPassword").value.trim();
+    // ✅ Attach `showLogin` and `showRegister` functions to `window`
+    window.showLogin = function () {
+        document.getElementById("registerForm").classList.add("hidden");
+        document.getElementById("loginForm").classList.remove("hidden");
+    }
 
-            showLoading();
-            try {
-                const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                const user = userCredential.user;
-
-                alert("Login successful!");
-                localStorage.setItem("username", user.displayName);
-                window.location.href = "dashboard.html";
-            } catch (error) {
-                alert(error.message);
-            } finally {
-                hideLoading();
-            }
-        }
-    </script>
+    window.showRegister = function () {
+        document.getElementById("loginForm").classList.add("hidden");
+        document.getElementById("registerForm").classList.remove("hidden");
+    }
+</script>
 </body>
 </html>
