@@ -96,16 +96,16 @@
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
     import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-    const firebaseConfig = {
-        apiKey: "YOUR_API_KEY",
-        authDomain: "YOUR_PROJECT.firebaseapp.com",
-        projectId: "YOUR_PROJECT_ID",
-        storageBucket: "YOUR_PROJECT.appspot.com",
-        messagingSenderId: "YOUR_SENDER_ID",
-        appId: "YOUR_APP_ID"
-    };
+      const firebaseConfig = {
+            apiKey: "AIzaSyCzV89S5k2Cc1cv0nBNcDItXAS3Xrq3z3I",
+            authDomain: "database-e0b02.firebaseapp.com",
+            projectId: "database-e0b02",
+            storageBucket: "database-e0b02.appspot.com",
+            messagingSenderId: "74833071591",
+            appId: "1:74833071591:web:f4f1dd5e2aafebda7c8142"
+        };
 
-    // Initialize Firebase
+        // ✅ Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
