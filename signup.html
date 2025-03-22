@@ -5,11 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register & Login</title>
 
-    <!-- Firebase SDK (Modular v9) -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
-
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -77,13 +72,13 @@
     <div class="container" id="registerForm">
         <h2>Register</h2>
         <input type="text" placeholder="Full Name" id="fullname" required>
-        <input type="text" placeholder="Username" id="username" required> <!-- Added username input -->
+        <input type="text" placeholder="Username" id="username" required>
         <input type="email" placeholder="Email" id="email" required>
         <input type="tel" placeholder="Phone (e.g. +1234567890)" id="phone" required>
         <input type="password" placeholder="Password" id="password" required>
         <input type="text" placeholder="Security Question: 9 + 6 - 3 = ?" id="security" required>
-        <button class="register-btn" onclick="window.register()">Register</button>
-        <button class="switch-btn" onclick="window.showLogin()">Switch to Login</button>
+        <button class="register-btn" onclick="register()">Register</button>
+        <button class="switch-btn" onclick="showLogin()">Switch to Login</button>
     </div>
 
     <!-- Login Form -->
@@ -91,24 +86,23 @@
         <h2>Login</h2>
         <input type="email" placeholder="Email" id="loginEmail" required>
         <input type="password" placeholder="Password" id="loginPassword" required>
-        <button class="login-btn" onclick="window.login()">Login</button>
-        <button class="switch-btn" onclick="window.showRegister()">Switch to Register</button>
+        <button class="login-btn" onclick="login()">Login</button>
+        <button class="switch-btn" onclick="showRegister()">Switch to Register</button>
     </div>
 
     <script type="module">
-        // Firebase Configuration (Modular v9)
+        // Firebase Configuration (Updated)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
         import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
         const firebaseConfig = {
-            apiKey: "AIzaSyCzV89S5k2Cc1cv0nBNcDItXAS3Xrq3z3I", //**IMPORTANT: SECURE THIS!**
-            authDomain: "database-e0b02.firebaseapp.com",
-            projectId: "database-e0b0",
-            storageBucket: "database-e0b02.appspot.com",
-            messagingSenderId: "74833071591",
-            appId: "1:74833071591:web:f4f1dd5e2aafebda7c8142",
-            measurementId: "G-L2L5W8GS74"
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
         };
 
         // Initialize Firebase
@@ -116,97 +110,77 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        window.showLoading = function() {
+        function showLoading() {
             document.getElementById("loadingBanner").style.display = "block";
         }
 
-        window.hideLoading = function() {
+        function hideLoading() {
             document.getElementById("loadingBanner").style.display = "none";
         }
 
-        // Registration Function
-        window.register = async function() {
+        // Register User
+        async function register() {
             let fullname = document.getElementById("fullname").value.trim();
-            let username = document.getElementById("username").value.trim(); // Get username
+            let username = document.getElementById("username").value.trim();
             let email = document.getElementById("email").value.trim();
             let phone = document.getElementById("phone").value.trim();
             let password = document.getElementById("password").value.trim();
             let security = document.getElementById("security").value.trim();
 
-            let phonePattern = /^\+\d{1,3}\d{7,}$/;
-            let correctAnswer = "12";
-
             if (!fullname || !username || !email || !phone || !password || !security) {
                 alert("All fields are required!");
                 return;
             }
-            if (!phone.match(phonePattern)) {
-                alert("Invalid phone number! Include country code (e.g., +1234567890)");
-                return;
-            }
-            if (security !== correctAnswer) {
+            if (security !== "12") {
                 alert("Wrong security answer! Try again.");
                 return;
             }
 
-            window.showLoading(); // Show loading banner
-
+            showLoading();
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
-                const userId = user.uid;
+
+                // Update the user's profile with username
+                await updateProfile(user, { displayName: username });
 
                 // Store user data in Firestore
-                await setDoc(doc(db, "users", userId), {
+                await setDoc(doc(db, "users", user.uid), {
                     fullName: fullname,
-                    username: username, // Store username
+                    username: username,
                     email: email,
                     phone: phone
                 });
 
                 alert("Registration successful!");
+                localStorage.setItem("username", username);
                 window.location.href = "dashboard.html";
-
             } catch (error) {
                 alert(error.message);
             } finally {
-                window.hideLoading(); // Ensure loading banner is hidden
+                hideLoading();
             }
         }
 
-        // Login Function
-        window.login = async function() {
+        // Login User
+        async function login() {
             let email = document.getElementById("loginEmail").value.trim();
             let password = document.getElementById("loginPassword").value.trim();
 
-            if (!email || !password) {
-                alert("All fields are required!");
-                return;
-            }
-
-            window.showLoading(); // Show loading banner
-
+            showLoading();
             try {
-                await signInWithEmailAndPassword(auth, email, password);
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
                 alert("Login successful!");
+                localStorage.setItem("username", user.displayName);
                 window.location.href = "dashboard.html";
             } catch (error) {
                 alert(error.message);
             } finally {
-                window.hideLoading(); // Ensure loading banner is hidden
+                hideLoading();
             }
         }
-
-        window.showLogin = function() {
-            document.getElementById("registerForm").classList.add("hidden");
-            document.getElementById("loginForm").classList.remove("hidden");
-        }
-
-        window.showRegister = function() {
-            document.getElementById("loginForm").classList.add("hidden");
-            document.getElementById("registerForm").classList.remove("hidden");
-        }
     </script>
-
 </body>
 </html>
